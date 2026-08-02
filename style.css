@@ -240,3 +240,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   color: #fff;
   border-color: #DC2626;
 }
+del-btn-vis {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #991B1B;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.del-btn-vis:hover {
+  background: #DC2626;
+  color: #fff;
+  border-color: #DC2626;
+}
