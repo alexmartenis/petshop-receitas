@@ -240,7 +240,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   color: #fff;
   border-color: #DC2626;
 }
-del-btn-vis {
+.del-btn-vis {
   display: inline-flex;
   align-items: center;
   gap: 4px;
