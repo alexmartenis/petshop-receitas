@@ -379,9 +379,9 @@ function renderMovimentos() {
   const data   = loadData();
   const today  = getToday();
 
-  // Determina o mês a mostrar
-  const allKeys = Object.keys(data).sort().reverse();
-  if (!_movMK || !allKeys.includes(_movMK)) _movMK = currentMonthKey();
+  // Determina o mês a mostrar — filtra só chaves no formato YYYY-MM
+  const allKeys = Object.keys(data).filter(k=>/^\d{4}-\d{2}$/.test(k)).sort().reverse();
+  if (!_movMK || !allKeys.includes(_movMK)) _movMK = allKeys[0] || currentMonthKey();
 
   // Atualiza o seletor de mês
   const selHTML = allKeys.length > 0
@@ -417,7 +417,7 @@ function renderMovimentos() {
     return;
   }
 
-  let html = `<table class="mov-table"><thead><tr><th>Data / Hora</th><th>Método</th><th>Faturação</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>`;
+  let html = `<table class="mov-table"><thead><tr><th>Data / Hora</th><th>Método</th><th>Faturação</th><th style="text-align:right">Valor</th><th style="text-align:center">Apagar</th></tr></thead><tbody>`;
 
   sortedDays.forEach(day => {
     const isRetro = day < today;
@@ -433,9 +433,9 @@ function renderMovimentos() {
         ? '<span class="badge badge-fat"><i class="ti ti-file-invoice" style="font-size:10px"></i> Faturado</span>'
         : '<span class="badge badge-nofat"><i class="ti ti-file-off" style="font-size:10px"></i> S/Fatura</span>';
 
-      if (e.mb>0)  html += `<tr><td>${dateCell}</td><td><span class="badge badge-mb"><i class="ti ti-credit-card" style="font-size:10px"></i> Multibanco</span></td><td><span class="badge badge-fat"><i class="ti ti-file-invoice" style="font-size:10px"></i> Sempre</span></td><td style="text-align:right;font-family:'DM Serif Display',serif;font-size:15px">${fmtEur(e.mb)}</td><td><button class="del-btn" onclick="deleteEntry('${mk2}',${e.idx})"><i class="ti ti-trash"></i></button></td></tr>`;
-      if (e.num>0) html += `<tr><td>${dateCell}</td><td><span class="badge badge-num"><i class="ti ti-cash" style="font-size:10px"></i> Numerário</span></td><td>${fatBadge(e.numFat)}</td><td style="text-align:right;font-family:'DM Serif Display',serif;font-size:15px">${fmtEur(e.num)}</td><td><button class="del-btn" onclick="deleteEntry('${mk2}',${e.idx})"><i class="ti ti-trash"></i></button></td></tr>`;
-      if (e.mbw>0) html += `<tr><td>${dateCell}</td><td><span class="badge badge-mbw"><i class="ti ti-device-mobile" style="font-size:10px"></i> MBWay</span></td><td>${fatBadge(e.mbwFat)}</td><td style="text-align:right;font-family:'DM Serif Display',serif;font-size:15px">${fmtEur(e.mbw)}</td><td><button class="del-btn" onclick="deleteEntry('${mk2}',${e.idx})"><i class="ti ti-trash"></i></button></td></tr>`;
+      if (e.mb>0)  html += `<tr><td>${dateCell}</td><td><span class="badge badge-mb"><i class="ti ti-credit-card" style="font-size:10px"></i> Multibanco</span></td><td><span class="badge badge-fat"><i class="ti ti-file-invoice" style="font-size:10px"></i> Sempre</span></td><td style="text-align:right;font-family:'DM Serif Display',serif;font-size:15px">${fmtEur(e.mb)}</td><td style="text-align:center"><button class="del-btn-vis" onclick="deleteEntry('${mk2}',${e.idx})"><i class="ti ti-trash"></i> Apagar</button></td></tr>`;
+      if (e.num>0) html += `<tr><td>${dateCell}</td><td><span class="badge badge-num"><i class="ti ti-cash" style="font-size:10px"></i> Numerário</span></td><td>${fatBadge(e.numFat)}</td><td style="text-align:right;font-family:'DM Serif Display',serif;font-size:15px">${fmtEur(e.num)}</td><td style="text-align:center"><button class="del-btn-vis" onclick="deleteEntry('${mk2}',${e.idx})"><i class="ti ti-trash"></i> Apagar</button></td></tr>`;
+      if (e.mbw>0) html += `<tr><td>${dateCell}</td><td><span class="badge badge-mbw"><i class="ti ti-device-mobile" style="font-size:10px"></i> MBWay</span></td><td>${fatBadge(e.mbwFat)}</td><td style="text-align:right;font-family:'DM Serif Display',serif;font-size:15px">${fmtEur(e.mbw)}</td><td style="text-align:center"><button class="del-btn-vis" onclick="deleteEntry('${mk2}',${e.idx})"><i class="ti ti-trash"></i> Apagar</button></td></tr>`;
     });
 
     const dayT = computeRevTotals(dayEntries);
@@ -550,24 +550,58 @@ function importData(event) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const imp = JSON.parse(e.target.result);
-      if(typeof imp!=='object') throw new Error();
+      const raw = JSON.parse(e.target.result);
+      if(typeof raw!=='object') throw new Error();
+
+      // Detecta formato antigo: tem chave "entries" diretamente ou
+      // tem chaves que são meses (YYYY-MM) com entries dentro
+      // Formato antigo (crmps_data): { "2026-05": { entries: [...] } }
+      // Formato novo  (crmps_v1):    { "2026-05": { entries: [...], despesas: [...] } }
+      // Ambos são compatíveis — a diferença é só a chave do localStorage
+      // O problema era que o ficheiro exportado da versão antiga
+      // usava localStorage.getItem('crmps_data') mas era guardado
+      // com a mesma estrutura de meses
+
+      let imp = raw;
+
+      // Se o ficheiro tiver uma chave "crmps_data" ou "crmps_v1" dentro
+      // (exportação incorreta que guardou o wrapper)
+      if (raw['crmps_data']) imp = JSON.parse(raw['crmps_data']);
+      else if (raw['crmps_v1']) imp = JSON.parse(raw['crmps_v1']);
+
       const ex = loadData(); const mg={...ex};
+      let count = 0;
+
       Object.keys(imp).forEach(mk=>{
-        if(!mg[mk]) mg[mk]=imp[mk];
-        else {
+        // Valida que a chave é um mês válido (YYYY-MM)
+        if(!/^\d{4}-\d{2}$/.test(mk)) return;
+
+        const impMonth = imp[mk];
+        // Suporte a formato antigo onde entries pode estar diretamente
+        const impEntries  = impMonth.entries  || [];
+        const impDespesas = impMonth.despesas || [];
+
+        if(!mg[mk]) {
+          mg[mk] = { entries: impEntries, despesas: impDespesas };
+        } else {
           const et  = new Set((mg[mk].entries||[]).map(x=>x.ts));
           const edt = new Set((mg[mk].despesas||[]).map(x=>x.ts));
           mg[mk]={
-            entries: [...(mg[mk].entries||[]),...(imp[mk].entries||[]).filter(x=>!et.has(x.ts))],
-            despesas:[...(mg[mk].despesas||[]),...(imp[mk].despesas||[]).filter(x=>!edt.has(x.ts))]
+            entries:  [...(mg[mk].entries||[]),  ...impEntries.filter(x=>!et.has(x.ts))],
+            despesas: [...(mg[mk].despesas||[]), ...impDespesas.filter(x=>!edt.has(x.ts))]
           };
         }
+        count += impEntries.length;
       });
+
       saveData(mg);
-      showToast('Importado com sucesso!');
+      if(count > 0) {
+        showToast(`Importado! ${count} registo(s) carregado(s).`);
+      } else {
+        showToast('Ficheiro importado — sem registos novos encontrados.','ti-alert-circle');
+      }
       renderRegistos();
-    } catch { showToast('Ficheiro inválido.','ti-alert-circle'); }
+    } catch { showToast('Ficheiro inválido ou corrompido.','ti-alert-circle'); }
   };
   reader.readAsText(file); event.target.value='';
 }

@@ -217,3 +217,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @media(max-width:400px){
   .metrics-today{grid-template-columns:1fr}.dash-kpi-grid{grid-template-columns:1fr}
 }
+
+/* Botão apagar visível na tabela de movimentos */
+.del-btn-vis {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #991B1B;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.del-btn-vis:hover {
+  background: #DC2626;
+  color: #fff;
+  border-color: #DC2626;
+}
