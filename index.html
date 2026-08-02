@@ -1,43 +1,154 @@
-🐾
-Receita & Despesas Pet Shop
-Registar Receita Despesas Movimentos Dashboard
- Novo mês
- Exportar dados  Importar dados
- 🐾 Pet Shop
-Registar Receita
-Nova entrada
- Data do movimento 
-dd/mm/aaaa
- Multibanco  Sempre faturado
-Valor (€) 
-0,00
- Numerário
-Valor (€)
-0,00
-Cliente pediu fatura
- MBWay
-Valor (€)
-0,00
-Cliente pediu fatura
- Confirmar entrada
-Total acumulado do mês — todas as receitas
- Faturação / S/Faturação / IVA
-Despesas
-Registar despesa
- Nome da despesa
-Ex: Renda, Fornecedor, Seguro...
- Valor (€)
-0,00
- Data limite pagamento
-dd/mm/aaaa
- Adicionar despesa
-Movimentos
- Filtrar por dia: 
-dd/mm/aaaa
-  Todos os dias
-Total acumulado do mês selecionado
-Dashboard
- IVA do trimestre
- Receitas mensais — histórico
-Multibanco Numerário MBWay
- Detalhe do mês
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Receita & Despesas — Pet Shop</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">🐾</span>
+      <div class="logo-text">
+        <span class="logo-title">Receita & Despesas</span>
+        <span class="logo-sub">Pet Shop</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="registos"  onclick="showView('registos')"><i class="ti ti-pencil-plus"></i><span>Registar Receita</span></button>
+      <button class="nav-item" data-view="despesas"         onclick="showView('despesas')"><i class="ti ti-receipt"></i><span>Despesas</span></button>
+      <button class="nav-item" data-view="movimentos"       onclick="showView('movimentos')"><i class="ti ti-list-details"></i><span>Movimentos</span></button>
+      <button class="nav-item" data-view="dashboard"        onclick="showView('dashboard')"><i class="ti ti-chart-bar"></i><span>Dashboard</span></button>
+    </nav>
+    <div class="sidebar-month">
+      <div class="month-badge" id="sidebarMonth"></div>
+      <button class="new-month-btn" onclick="confirmReset()"><i class="ti ti-refresh"></i> Novo mês</button>
+    </div>
+    <div class="sidebar-export">
+      <button class="export-btn" onclick="exportData()"><i class="ti ti-download"></i> Exportar dados</button>
+      <label class="import-btn"><i class="ti ti-upload"></i> Importar dados<input type="file" accept=".json" onchange="importData(event)" style="display:none"></label>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+    <span class="topbar-title">🐾 Pet Shop</span>
+    <div class="topbar-month" id="topbarMonth"></div>
+  </header>
+
+  <main class="main-content">
+
+    <!-- REGISTAR RECEITA -->
+    <div class="view active" id="view-registos">
+      <div class="page-header"><h1>Registar Receita</h1><p class="page-sub" id="regDateSub"></p></div>
+      <div class="metrics-today" id="metricsToday"></div>
+      <div class="form-card">
+        <div class="form-section-title"><i class="ti ti-plus-circle"></i> Nova entrada</div>
+        <div class="form-date-row">
+          <div class="form-field">
+            <label><i class="ti ti-calendar"></i> Data do movimento</label>
+            <input type="date" id="inDate">
+            <div class="date-hint" id="dateHint"></div>
+          </div>
+        </div>
+        <div class="payment-block block-mb">
+          <div class="payment-block-header">
+            <span class="payment-label"><i class="ti ti-credit-card"></i> Multibanco</span>
+            <span class="always-invoiced-badge"><i class="ti ti-file-invoice"></i> Sempre faturado</span>
+          </div>
+          <div class="form-field">
+            <label>Valor (€)</label>
+            <input type="number" id="inMB" placeholder="0,00" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="payment-block block-num">
+          <div class="payment-block-header"><span class="payment-label"><i class="ti ti-cash"></i> Numerário</span></div>
+          <div class="payment-block-body">
+            <div class="form-field" style="margin:0"><label>Valor (€)</label><input type="number" id="inNum" placeholder="0,00" min="0" step="0.01"></div>
+            <div class="invoice-toggle"><label class="toggle-label"><input type="checkbox" id="inNumFat"><span class="toggle-track"></span><span class="toggle-text">Cliente pediu fatura</span></label></div>
+          </div>
+        </div>
+        <div class="payment-block block-mbw">
+          <div class="payment-block-header"><span class="payment-label"><i class="ti ti-device-mobile"></i> MBWay</span></div>
+          <div class="payment-block-body">
+            <div class="form-field" style="margin:0"><label>Valor (€)</label><input type="number" id="inMBW" placeholder="0,00" min="0" step="0.01"></div>
+            <div class="invoice-toggle"><label class="toggle-label"><input type="checkbox" id="inMBWFat"><span class="toggle-track"></span><span class="toggle-text">Cliente pediu fatura</span></label></div>
+          </div>
+        </div>
+        <button class="btn-confirm" onclick="addEntry()"><i class="ti ti-check"></i> Confirmar entrada</button>
+      </div>
+      <div class="summary-card"><div class="summary-card-title"><i class="ti ti-sigma"></i> Total acumulado do mês — todas as receitas</div><div id="bloco1Content"></div></div>
+      <div class="summary-card accent-card"><div class="summary-card-title"><i class="ti ti-file-invoice"></i> Faturação / S/Faturação / IVA</div><div id="bloco2Content"></div></div>
+    </div>
+
+    <!-- DESPESAS -->
+    <div class="view" id="view-despesas">
+      <div class="page-header"><h1>Despesas</h1><p class="page-sub" id="despDateSub"></p></div>
+      <div id="despesaIndicator"></div>
+      <div class="form-card">
+        <div class="form-section-title"><i class="ti ti-plus-circle"></i> Registar despesa</div>
+        <div class="desp-form-grid">
+          <div class="form-field span2"><label><i class="ti ti-tag"></i> Nome da despesa</label><input type="text" id="despNome" placeholder="Ex: Renda, Fornecedor, Seguro..."></div>
+          <div class="form-field"><label><i class="ti ti-currency-euro"></i> Valor (€)</label><input type="number" id="despValor" placeholder="0,00" min="0" step="0.01"></div>
+          <div class="form-field"><label><i class="ti ti-calendar-due"></i> Data limite pagamento</label><input type="date" id="despData"></div>
+        </div>
+        <button class="btn-confirm btn-desp" onclick="addDespesa()"><i class="ti ti-plus"></i> Adicionar despesa</button>
+      </div>
+      <div class="table-card" id="despesaTable"></div>
+    </div>
+
+    <!-- MOVIMENTOS — com seletor de mês -->
+    <div class="view" id="view-movimentos">
+      <div class="page-header"><h1>Movimentos</h1><p class="page-sub" id="movDateSub"></p></div>
+
+      <!-- SELETOR DE MÊS (novo) -->
+      <div id="movMonthSelector"></div>
+
+      <div class="filter-row">
+        <label class="filter-label"><i class="ti ti-filter"></i> Filtrar por dia:</label>
+        <input type="date" id="filterDate" onchange="renderMovimentos()">
+        <button class="btn-clear-filter" onclick="clearFilter()"><i class="ti ti-x"></i> Todos os dias</button>
+      </div>
+
+      <div class="table-card" id="movTable"></div>
+      <div class="summary-card" style="margin-top:1.5rem">
+        <div class="summary-card-title"><i class="ti ti-sigma"></i> Total acumulado do mês selecionado</div>
+        <div id="monthSummary2"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="view" id="view-dashboard">
+      <div class="page-header"><h1>Dashboard</h1><p class="page-sub" id="dashDateSub"></p></div>
+      <div id="dashCoverAlert"></div>
+      <div class="dash-kpi-grid" id="dashKpiGrid"></div>
+      <div class="summary-card iva-card"><div class="summary-card-title"><i class="ti ti-receipt-tax"></i> IVA do trimestre</div><div id="dashIvaContent"></div></div>
+      <div class="chart-card">
+        <div class="summary-card-title" style="margin-bottom:.75rem"><i class="ti ti-chart-bar"></i> Receitas mensais — histórico</div>
+        <div class="legend-row">
+          <span class="legend-item"><span class="legend-dot" style="background:#2563EB"></span>Multibanco</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#16A34A"></span>Numerário</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#D97706"></span>MBWay</span>
+        </div>
+        <div class="chart-wrap"><canvas id="dashChart"></canvas></div>
+      </div>
+      <div class="dash-months" id="dashMonths"></div>
+      <div class="summary-card"><div class="summary-card-title"><i class="ti ti-list"></i> Detalhe do mês</div><div id="dashDetailContent"></div></div>
+    </div>
+
+  </main>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
